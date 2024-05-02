@@ -58,16 +58,19 @@ int main(int argc, char *argv[] ) {
 
     /* Fill it with an IP address from a dotted-decimal string given as 
     a command-line argument stored in ‘argv[1]’ */
-    if( inet_aton( argv[1], &ia ) == 0 ) {
-        fprintf(stderr, "ERROR: Setting the IP address.\n" );
-
-        /* Exit with error above */
+    if (inet_aton(argv[1], &ia) == 0) {
+        fprintf(stderr, "ERROR: Setting the IP address.\n");
         return 1;
     }
 
     /* Store port as string in port_str and use atoi for ASCII-to-integer */
-    port_str = argv[2];         
-    port = ( unsigned short int ) atoi ( port_str );
+    port_str = argv[2];
+    port = (unsigned short int)atoi(port_str);
+
+    if (port <= 1023) {
+        fprintf(stderr, "client: ERROR: Port number %u is privileged.\n", port);
+        return 1;
+    }
 
     sa.sin_family = AF_INET;    /* Use IPv4 addresses */
     sa.sin_addr = ia;           /* Attach IP address structure */
@@ -98,8 +101,9 @@ int main(int argc, char *argv[] ) {
         printf("client: Sending: \"%s\"...\n", argv[i]);
         fd = open(argv[i], O_RDONLY);
         if (fd < 0) {
-            fprintf(stderr, "ERROR: Unable to open file %s.\n\n", argv[i]);
+            fprintf(stderr, "ERROR: Unable to open file / Empty file %s.\n\n", argv[i]);
             close(sockfd);
+            close(fd);
             continue;
         }
 
@@ -171,20 +175,14 @@ void SIGINT_handler( int sig ) {
 
 void cleanup ( void ) {
     /* Free ONLY if it's safe to do so... */
-
     if( outbuf != NULL) {
         free( outbuf );
         outbuf = NULL;
     }
-
-    if (inbuf != NULL) {
-        free(inbuf);
-        inbuf = NULL;
-    }   
-
     /* Free a file or socket descriptor */
     if ( fd > -1 ) {
         close( fd );        /* Close the file or socket. */
         fd = -1;            /* Mark it as such. */
     }
+
 }

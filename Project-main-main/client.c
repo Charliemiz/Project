@@ -26,7 +26,6 @@ int sockfd = -1;    /* Socket file descriptor (marked unused) */
 int fd = -1;   /* File descriptor for input file(s) */
 
 /* Buffer pointers */
-char *inbuf  = NULL;    /* For storing incoming data from 'recv()' */
 char *outbuf = NULL;    /* For storing outgoing data using 'send()' */
 
 int bytes_sent; /* keep track of how many bytes we've sent */
@@ -74,9 +73,9 @@ int main(int argc, char *argv[] ) {
 
     sa.sin_family = AF_INET;    /* Use IPv4 addresses */
     sa.sin_addr = ia;           /* Attach IP address structure */
-    sa.sin_port = htons( port ); /* Set port number in Network Byte Order */\
+    sa.sin_port = htons( port ); /* Set port number in Network Byte Order */
     /* socket address stored in sa is now ready! */
-    
+
     /* After allocation we read the files from command line */
     for (i = 3; i < argc; i++) {
         /* Attempt to connect message */
@@ -87,13 +86,13 @@ int main(int argc, char *argv[] ) {
         /* Check that it succeeded */
         if( sockfd < 0 ) {
             fprintf( stderr, "ERROR: Unable to obtain a new socket.\n\n" );
-            continue;
+            return 1;
         }
 
         if( connect( sockfd, (struct sockaddr *) &sa, sizeof( sa ) ) != 0 ) {
-            fprintf( stderr, "ERROR: Attempting to connect with the server.\n\n" );
+            fprintf( stderr, "client: ERROR: Attempting to connect with the server.\n\n" );
             close(sockfd);
-            continue;
+            return 1;
         } else {
             printf("client: Success!\n");
         } /* end if else () */
@@ -115,7 +114,7 @@ int main(int argc, char *argv[] ) {
             fprintf( stderr, "ERROR: Failed to allocate memory for output buffer.\n\n" );
             close(fd);
             close(sockfd);
-            continue;
+            return 1;
         }
 
         /* Read the file content(s) into proper buffer */
@@ -157,8 +156,6 @@ int main(int argc, char *argv[] ) {
     return 0;
 }
 
-
-
 /* SIGINT handler for the client */
 void SIGINT_handler( int sig ) {
 
@@ -183,6 +180,10 @@ void cleanup ( void ) {
     if ( fd > -1 ) {
         close( fd );        /* Close the file or socket. */
         fd = -1;            /* Mark it as such. */
+    }
+    if (sockfd > -1) {
+        close(sockfd);
+        sockfd = -1;
     }
 
 }
